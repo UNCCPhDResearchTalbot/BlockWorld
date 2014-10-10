@@ -23,6 +23,10 @@ public class GlobalObjs : MonoBehaviour
 	public static GameObject Shovel = null;
 	public static GameObject Lantern = null;
 	public static GameObject Box = null;
+	public static GameObject Audience = null;
+	public static GameObject Grave = null;
+	public static GameObject StageRight = null;
+	public static GameObject CenterBackStage = null;
 	
 	// Use this for initialization
 	void Start () {
@@ -70,7 +74,27 @@ public class GlobalObjs : MonoBehaviour
 			Shovel = templist[0];
 			templist = null;
 		}
-		if (Box == null) {
+		if (Audience == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Audience");
+			Audience = templist[0];
+			templist = null;
+		}
+		if (Grave == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Grave");
+			Grave = templist[0];
+			templist = null;
+		}
+		if (StageRight == null) {
+			templist = GameObject.FindGameObjectsWithTag ("StageRight");
+			StageRight = templist[0];
+			templist = null;
+		}
+		if (CenterBackStage == null) {
+			templist = GameObject.FindGameObjectsWithTag ("CenterBackStage");
+			CenterBackStage = templist[0];
+			templist = null;
+		}
+		/*if (Box == null) {
 			templist = GameObject.FindGameObjectsWithTag("Box");
 			for (int i=0; i<templist.Length; i++) {
 				if (templist[i].name == "Skull1") {
@@ -79,7 +103,7 @@ public class GlobalObjs : MonoBehaviour
 			}
 			//Box = templist[0];
 			templist = null;
-		}
+		}*/
 	}
 	
 	// Update is called once per frame
@@ -128,7 +152,27 @@ public class GlobalObjs : MonoBehaviour
 			Shovel = templist[0];
 			templist = null;
 		}
-		if (Box == null) {
+		if (Audience == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Audience");
+			Audience = templist[0];
+			templist = null;
+		}
+		if (Grave == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Grave");
+			Grave = templist[0];
+			templist = null;
+		}
+		if (StageRight == null) {
+			templist = GameObject.FindGameObjectsWithTag ("StageRight");
+			StageRight = templist[0];
+			templist = null;
+		}
+		if (CenterBackStage == null) {
+			templist = GameObject.FindGameObjectsWithTag ("CenterBackStage");
+			CenterBackStage = templist[0];
+			templist = null;
+		}
+		/*if (Box == null) {
 			templist = GameObject.FindGameObjectsWithTag("Box");
 			for (int i=0; i<templist.Length; i++) {
 				if (templist[i].name == "Skull1") {
@@ -137,13 +181,19 @@ public class GlobalObjs : MonoBehaviour
 			}
 			//Box = templist[0];
 			templist = null;
-		}
+		}*/
+		
+		if (InitScript.started && GlobalObjs.globalQueue.Count == 0) {
+			// read next set of lines
+			Debug.Log ("Calling next Step, no items in queue");
+			InitScript.callNextStep();
+		} 
 	
 	}
 	
 	public static GameObject getObject(string name) {
 		name = name.ToLower();
-		Debug.Log ("Getting object for:"+name);
+		//Debug.Log ("Getting object for:"+name);
 		switch (name) {
 		case "hamlet":
 			return Hamlet;
@@ -168,6 +218,18 @@ public class GlobalObjs : MonoBehaviour
 			break;
 		case "lantern":
 			return Lantern;
+			break;
+		case "audience":
+			return Audience;
+			break;
+		case "grave":
+			return Grave;
+			break;
+		case "stageright":
+			return StageRight;
+			break;
+		case "centerbackstage":
+			return CenterBackStage;
 			break;
 		default:
 			return null;
@@ -226,13 +288,33 @@ public class GlobalObjs : MonoBehaviour
 				break;
 			}
 		}
+		if (GlobalObjs.globalQueue[removethis].action == QueueObj.actiontype.speak) {
+			GlobalObjs.globalQueue[removethis].actorFunc.speakNum = -1;
+		} else {
+			GlobalObjs.globalQueue[removethis].actorFunc.workingNum = -1;
+		}
 		Debug.Log ("Removed msg="+which+", item="+removethis);
 		GlobalObjs.globalQueue.RemoveAt(removethis);
-		if (GlobalObjs.globalQueue.Count == 0) {
+/*		if (GlobalObjs.globalQueue.Count == 0) {
 			// read next set of lines
 			Debug.Log ("Calling next Step, no items in queue");
 			InitScript.callNextStep();
-		}
+		} else {*/
+			//Debug.Log ("*****Left in Queue:");
+			//for (int j=0; j < GlobalObjs.globalQueue.Count; j++) {
+			//	Debug.Log (GlobalObjs.globalQueue[j].msgNum+" - " +GlobalObjs.globalQueue[j].actorObj.name + " " + GlobalObjs.globalQueue[j].action.ToString());
+			//}
+			//Debug.Log ("*****End of Left in Queue");
+//		}
+		//Debug.Log ("REMOVED "+which);
+	}
+	
+	public static void printQueue(string msg) {
+		//Debug.Log ("*****Left in Queue:"+msg);
+			//for (int j=0; j < GlobalObjs.globalQueue.Count; j++) {
+			//	Debug.Log (GlobalObjs.globalQueue[j].msgNum+" - " +GlobalObjs.globalQueue[j].actorObj.name + " " + GlobalObjs.globalQueue[j].action.ToString());
+			//}
+			//Debug.Log ("*****End of Left in Queue"+msg);
 	}
 	
 }

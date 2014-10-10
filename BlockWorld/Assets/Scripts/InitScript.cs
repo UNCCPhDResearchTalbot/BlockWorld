@@ -29,7 +29,7 @@ public class InitScript : MonoBehaviour {
 	// for file reading
 	static char quote = System.Convert.ToChar (34);
 	//StreamWriter[] charFiles = null;
-	static bool started = false;
+	public static bool started = false;
 	static string path = @"";
 	static string inputFileName = Application.dataPath + @"//Files//InputFile.txt";
 	static StreamReader inputFile = null;
@@ -78,7 +78,7 @@ public class InitScript : MonoBehaviour {
 				float y;
 				bool success = float.TryParse (txtx, out x);
 				success = float.TryParse (txty, out y);
-				GlobalObjs.HamletFunc.doWalk(x, y, null);
+				GlobalObjs.HamletFunc.doWalk(x, y, null, false);
 				Debug.Log ("Clicked the button to walk");
 			}
 			txtsay = GUI.TextField (new Rect(780, 110, 100, 30), txtsay, 100);
@@ -106,10 +106,14 @@ public class InitScript : MonoBehaviour {
 				Debug.Log ("Putdown");
 				GlobalObjs.HamletFunc.doPutDown();
 			}
+			if (GUI.Button (new Rect(25, 230, 100, 30), "Follow")) {
+				Debug.Log ("Following");
+				GlobalObjs.GraveDiggerTwoFunc.doWalk (GlobalObjs.GraveDigger.transform.position.x, GlobalObjs.GraveDigger.transform.position.z, GlobalObjs.GraveDigger, true);
+			}
 			
 			//bool useBML = GUI.Toggle(new Rect(500, 30, 100, 30), BML, "Use BML File?");
 			if (GUI.Button (new Rect(25, 20, 100, 30), "Start Play")) {
-				Debug.Log ("Starting Play");	
+				Debug.Log ("Starting Play "+Time.time);	
 				//RunPlay();
 				starting = true;
 				timer = 0.0f;
@@ -170,20 +174,23 @@ public class InitScript : MonoBehaviour {
 		
 		string curLine = null;// = inputFile.ReadLine ();
 		string[] parsedLine = null;
+		bool firstiteration = true;
 		
 		
-		do {
+		while (firstiteration || (curLine != null && parsedLine[0] != "N")) {
+			firstiteration = false;
        		curLine = inputFile.ReadLine ();
 	        if (curLine != null) {
 	           
 	//            currentMessageNum++;
 	            parsedLine = curLine.Split ('\t');
 	            Debug.Log ("CJT LINE="+curLine);
+				//Debug.Log ("First item=" +parsedLine[0]);
 	            switch (parsedLine [1]) {
 	                case "MOVE":
 	                    //Debug.Log ("CJT MESSAGE="+parsedLine [1] + " " + parsedLine [2] + " CJT" + currentMessageNum + " " + parsedLine [3]);
 	                    //vhmsg.SendVHMsg ("vrExpress", parsedLine [1] + " " + parsedLine [2] + " CJT" + currentMessageNum + " " + parsedLine [3]);
-	                Debug.Log ("Doing movement for "+parsedLine[2]+" doing:"+parsedLine[4]);	
+	                //Debug.Log ("Doing movement for "+parsedLine[2]+" doing:"+parsedLine[4]);	
 					parseMovement(parsedLine[2], parsedLine[4]);    
 					
 					break;
@@ -197,7 +204,7 @@ public class InitScript : MonoBehaviour {
 						
 						CharFuncs who = GlobalObjs.getCharFunc(parsedLine[2]);
 						string saywhat = findSpeech(parsedLine[4]);
-						Debug.Log (parsedLine[2]+" says: "+saywhat);
+						//Debug.Log (parsedLine[2]+" says: "+saywhat);
 						who.doSpeak (saywhat);
 	                    //vhmsg.SendVHMsg ("vrSpeak", parsedLine [1] + " " + parsedLine [2] + " CJT" + currentMessageNum + " " + parsedLine [3]);
 	                    //}
@@ -207,8 +214,8 @@ public class InitScript : MonoBehaviour {
 					Debug.Log ("Bad command");
 	                    break;
 	            }
-	            curLine = null;
-	            parsedLine = null;
+	            //curLine = null;
+	            //parsedLine = null;
 	        } else {
 	            // exit - nothing left to do
 	            Debug.Log ("CJT MESSAGE=DONE!!");
@@ -218,7 +225,8 @@ public class InitScript : MonoBehaviour {
 	            //currentMessageNum = 0;
 	           // Application.Quit ();
 	        }
-		} while (curLine != null && parsedLine[0] != "N");
+
+		} //while (curLine != null && parsedLine[0] != "N");
 		
 	}
 	
@@ -239,7 +247,10 @@ public class InitScript : MonoBehaviour {
 		//string action;
 		float targetx = -1;
 		float targety = -1;
+		float targetx2 = -1;
+		float targety2 = -1;
 		GameObject target = null;
+		bool following = false;
 		
 		string myText = null;
 		int startPos = 0;
@@ -248,6 +259,7 @@ public class InitScript : MonoBehaviour {
 		
 		if (xmltxt.Contains ("follow=")) {
 			startPos = xmltxt.IndexOf ("follow="+quote);
+			following = true;
 		} else {
 			startPos = xmltxt.IndexOf ("target="+quote);
 		}
@@ -266,6 +278,10 @@ public class InitScript : MonoBehaviour {
 			string[] position = targetstr.Split (' ');
 			bool success = float.TryParse(position[0], out targetx);
 			success = float.TryParse (position[1], out targety);
+			if (position.Length > 2) {
+				success = float.TryParse(position[2], out targetx2);
+				success = float.TryParse(position[3], out targety2);
+			}
 			
 		} else {
 			// this is an object
@@ -283,9 +299,12 @@ public class InitScript : MonoBehaviour {
 		} else if (xmltxt.Contains ("locomotion")) {
 			Debug.Log ("Action=move");
 			if (target != null) {
-				who.doWalk (target.transform.position.x, target.transform.position.z, target);
+				who.doWalk (target.transform.position.x, target.transform.position.z, target, following);
 			} else {
-				who.doWalk (targetx, targety, null);
+				who.doWalk (targetx, targety, null, following);
+				if (targetx2 != -1) {
+					who.doWalk (targetx2, targety2, null, following); // this one should get queued
+				}
 			}
 		} else if (xmltxt.Contains ("gaze")) {
 			Debug.Log ("Action=turn");

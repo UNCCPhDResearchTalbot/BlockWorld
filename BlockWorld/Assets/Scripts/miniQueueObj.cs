@@ -6,11 +6,13 @@ public class miniQueueObj : MonoBehaviour {
 	public GameObject target;
 	public Vector3 targetpt;
 	public int msgnum;
+	public bool following;
 	
-	public miniQueueObj(Vector3 p, GameObject t, int n) {
+	public miniQueueObj(Vector3 p, GameObject t, int n, bool f) {
 		target = t;
 		targetpt = p;
 		msgnum = n;
+		following = f;
 	}
 	
 	public string getTargetType() {

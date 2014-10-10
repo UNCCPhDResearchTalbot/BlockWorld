@@ -1,6 +1,16 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/GlobalObjs.cs">
+    <Files>
+      <File FileName="Assets/Scripts/ChangeMaterials.cs" Line="55" Column="13" />
+      <File FileName="Assets/Scripts/GlobalObjs.cs" Line="142" Column="29" />
+      <File FileName="Assets/Scripts/CharFuncs.cs" Line="613" Column="5" />
+      <File FileName="Assets/Scripts/InitScript.cs" Line="111" Column="155" />
+      <File FileName="Assets/Scripts/QueueObj.cs" Line="14" Column="9" />
+      <File FileName="Assets/Scripts/miniQueueObj.cs" Line="11" Column="60" />
+      <File FileName="Assets/Files/InputFile.txt" Line="49" Column="387" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
