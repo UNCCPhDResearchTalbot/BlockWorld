@@ -12,7 +12,7 @@ public class InitScript : MonoBehaviour {
 	string txtmuchy = "5";
 	string txtx = "2";
 	string txty = "1";
-	string txtsay = "This is what I want to say here";
+	string txtsay = "Your gambols, your songs, your flashes of merriment, that were wont to set the table on a roar? Not one now to mock your own grinning? Quite chop-fallen.  Now get you to my lady's chamber, and tell her, let her paint an inch thick, to this favour she must come. Make her laugh at that.";
 	string txtforward = "3";
 	
 	// for mode dropdowns
@@ -33,10 +33,36 @@ public class InitScript : MonoBehaviour {
 	static string path = @"";
 	static string inputFileName = Application.dataPath + @"//Files//InputFile.txt";
 	static StreamReader inputFile = null;
+	
+	// variables for legend
+	public  Texture hamletT;
+	public  Texture horatioT;
+	public  Texture gravediggerT;
+	public  Texture gravediggertwoT;
+	public  Texture lanternT;
+	public  Texture shovelT;
+	public  Texture skull1T;
+	public  Texture skull2T;
+	public  Texture legendBkgrd;
+	
+	public float startx1 = 5f;
+	public float startx2 = 110f;
+	public float starty = 80f;
+	public float widthtext = 90f;
+	public float widthimg = 85f;
+	public float heighttext = 30f;
+	public float heightimg = 135f;
+	public float startximg1 = 5f;
+	public float startximg2 = 100f;
+	public float startyimg = 100f;
+	public float spacing;
+	public float linex = .7f;
+	public float liney = .5f;
+	public Material mat;
 
 	// Use this for initialization
 	void Start () {
-		
+		spacing = heightimg+heighttext+5f;
 	}
 	
 	// Update is called once per frame
@@ -56,6 +82,46 @@ public class InitScript : MonoBehaviour {
 	}
 	
 	void OnGUI() {
+		
+		// legend
+		GUI.BeginGroup(new Rect(1200, -3, 200, 900));
+			GUI.Box (new Rect(0,-3, 200,900), legendBkgrd);
+		
+			GUIStyle mystyle = new GUIStyle();
+			mystyle.fontSize = 30;
+			mystyle.normal.textColor = Color.white;
+			GUI.Label (new Rect(20, startx1+20, widthtext*2, heighttext*2), "LEGEND", mystyle);
+		
+			GUI.Label (new Rect(startx2, starty, widthtext, heighttext), "Hamlet:");
+			GUI.Label(new Rect(startximg2, startyimg,widthimg,heightimg), new GUIContent(hamletT));
+			
+			GUI.Label (new Rect(startx2, starty+(spacing*1), widthtext, heighttext), "Horatio:");
+			GUI.Label(new Rect(startximg2, startyimg+(spacing*1),widthimg,heightimg), new GUIContent(horatioT));
+		
+			GUI.Label (new Rect(startx1, starty, widthtext, heighttext), "GraveDigger 1:");
+			GUI.Label(new Rect(startximg1, startyimg,widthimg,heightimg), new GUIContent(gravediggerT));
+		
+			GUI.Label (new Rect(startx1, starty+(spacing*1), widthtext, heighttext), "GraveDigger 2:");
+			GUI.Label(new Rect(startximg1, startyimg+(spacing*1),widthimg,heightimg), new GUIContent(gravediggertwoT));
+		
+			GUI.Label (new Rect(startx1, starty+(spacing*2), widthtext*2, heighttext*2), "--------------------------------------------");
+		
+			GUI.Label (new Rect(startx1, starty+30+(spacing*2), widthtext, heighttext), "Shovel:");
+			GUI.Label(new Rect(startximg1, startyimg+30+(spacing*2),widthimg,heightimg*2), new GUIContent(shovelT));
+		
+			GUI.Label (new Rect(startx1, starty+30+(spacing*2.5f), widthtext, heighttext), "Lantern:");
+			GUI.Label(new Rect(startximg1, startyimg+30+(spacing*2.5f),widthimg,heightimg*2), new GUIContent(lanternT));
+		
+			GUI.Label (new Rect(startx2, starty+30+(spacing*2), widthtext, heighttext), "Skull 1:");
+			GUI.Label(new Rect(startximg2, startyimg+30+(spacing*2),widthimg,heightimg), new GUIContent(skull1T));
+		
+			GUI.Label (new Rect(startx2, starty+30+(spacing*2.5f), widthtext, heighttext), "Skull 2:");
+			GUI.Label(new Rect(startximg2, startyimg+30+(spacing*2.5f),widthimg,heightimg), new GUIContent(skull2T));
+		
+		
+		GUI.EndGroup();
+		//GUI.DrawTexture(new Rect(100,60, 50,50), hamletT, ScaleMode.ScaleToFit, true, 0);
+		// end legend
 		
 		if (started) {
 			// show nothing

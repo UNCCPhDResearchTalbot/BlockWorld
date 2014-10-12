@@ -49,6 +49,7 @@
      <Compile Include="Assets\Scripts\GlobalObjs.cs" />
      <Compile Include="Assets\Scripts\InitScript.cs" />
      <Compile Include="Assets\Scripts\QueueObj.cs" />
+     <Compile Include="Assets\Scripts\SpeechBubble.cs" />
      <Compile Include="Assets\Scripts\miniQueueObj.cs" />
      <None Include="Assets\Files\InputFile.txt" />
   </ItemGroup>

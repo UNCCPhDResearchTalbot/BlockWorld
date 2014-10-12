@@ -3,6 +3,10 @@ using System.Collections;
 
 public class CharFuncs : MonoBehaviour {
 	
+	public GUIStyle mystyle;
+	public Texture myicon;
+	public Texture bubbleTexture;
+	
 	// GameObject this function is tied to!!
 	public GameObject thisChar;
 	string voice;
@@ -45,10 +49,17 @@ public class CharFuncs : MonoBehaviour {
 	
 	public int workingNum = -1;
 	public int speakNum = -1;
+	SpeechBubble speechfunc = null;
+	bool speaking = false;
+	string saywhat = "";
 
 	// Use this for initialization of vars
 	void Start () {
+		mystyle.normal.textColor = Color.white;
+		mystyle.alignment = TextAnchor.MiddleCenter;
 		thisChar = gameObject;
+		speechfunc = (SpeechBubble)thisChar.GetComponent(typeof(SpeechBubble));
+		speaking=false;
 		switch(this.name) {
 			case "Hamlet":
 				voice = "Alex";
@@ -159,6 +170,9 @@ public class CharFuncs : MonoBehaviour {
 				Debug.Log ("Done Speaking at "+Time.time+" for "+thisChar.name);
 				myProcess.Close ();
 				myProcess = null;
+				speechfunc.showbubble = false;
+				speaking=false;
+				saywhat = "";
 				GlobalObjs.removeOne(speakNum);
 				//speakNum = -1;
 			}
@@ -510,13 +524,16 @@ public class CharFuncs : MonoBehaviour {
 		QueueObj temp = new QueueObj(thisChar, null, nullVector, QueueObj.actiontype.speak);
 		GlobalObjs.globalQueue.Add(temp);
 		speakNum = temp.msgNum;
+		speechfunc.showbubble = true;
+		saywhat = toSay;
 		//Debug.Log ("Said:"+toSay);	
 		// clean up all ' and " to be /' and /"
-		toSay = toSay.Replace("'", "\\'");
-		toSay = toSay.Replace ("\"", "\\\"");
+		toSay = toSay.Replace("'", "");//"\\'");
+		toSay = toSay.Replace ("\"", " ");
+		toSay = toSay.ToLower ();
 		//Debug.Log ("Cleaned said:"+toSay);
-		
-		myProcess = System.Diagnostics.Process.Start ("say", "-v "+voice + " " + toSay);
+		speaking=true;
+		myProcess = System.Diagnostics.Process.Start ("say", "-v "+voice + " \"" + toSay+"\"");
 		
 	}
 	
@@ -631,5 +648,29 @@ public class CharFuncs : MonoBehaviour {
 		//	Debug.Log ("Position G2="+thisChar.transform.position+" G1="+o.transform.position+" distance="+distance+" direction="+direction+" minusamt="+ minusamt+" postn="+(thisChar.transform.position + (direction *(distance - minusamt))));
 		//}
 		return thisChar.transform.position + (direction * (distance - minusamt));
+	}
+	
+	void OnGUI() {
+		// show text when speaking
+		if(speaking) {
+			GUI.Label (new Rect(150, 630, 1000, 30), new GUIContent(saywhat, myicon), mystyle);	
+			//Debug.Log (saywhat);
+			Vector3 ptheight = Camera.main.WorldToScreenPoint(thisChar.transform.position + new Vector3(0f, 40f, 0f));
+			Vector3 ptheightabove = Camera.main.WorldToScreenPoint(thisChar.transform.position + new Vector3(0f, 41f, 0f));
+			Vector3 pt = Camera.main.WorldToScreenPoint(thisChar.transform.position);
+			Debug.Log ("ph="+ptheight+", pha="+ptheightabove+", p="+pt);
+			float heightdiff = ptheight.y - pt.y;
+			float width = (2f/40f) * heightdiff;
+			float bubbleheight = 1.15f * width;
+			float bubblewidth = width;
+			float startbubbley = pt.y +(bubbleheight/2);//ptheight.y;//Screen.height - ptheightabove.y -25f;
+			float startbubblex = ptheight.x - (.4f*width);
+			Debug.Log ("hd="+heightdiff+", w="+width+",bh="+bubbleheight+", bw="+bubblewidth+", sby="+startbubbley+", sbx="+startbubblex);
+			GUI.DrawTexture(new Rect(startbubblex, startbubbley, bubblewidth, bubbleheight), bubbleTexture, ScaleMode.ScaleToFit, true, 0f);
+			//GUI.Label (new Rect(startbubblex, ptheight.y, 30,30), "H");
+			//GUI.Label (new Rect(startbubblex, ptheightabove.y, 30, 30), "A");
+			//GUI.Label (new Rect(startbubblex, pt.y, 30,30), "P");
+			//GUI.Label (new Rect(startbubblex, Screen.height-ptheight.y, 30,30), "S");
+		}
 	}
 }
