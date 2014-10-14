@@ -32,6 +32,7 @@ public class CharFuncs : MonoBehaviour {
 	bool following;
 	float timer = 0.0f;
 	float timerMax = 2.0f;
+	bool left = false;
 	
 	//variables for the pickup/putdown
 	bool shrinking = false;
@@ -40,6 +41,17 @@ public class CharFuncs : MonoBehaviour {
 	static float sspeed = 20f;
 	bool pickup = true;
 	static float carrydropheight = 0.5f;
+	Vector3 curscalesize;
+	
+	//variables for pointing
+	bool pointing = false;
+	GameObject pointtarget;
+	float pointertimer = 0.0f;
+	float pointertimerMax = 2.0f;
+	public GameObject prefabarm;
+	Material armmat;
+	GameObject arm;
+	public int pointnum = -1;
 	
 	// static constants
 	static Vector3 nullVector = new Vector3(0,0,0);
@@ -49,7 +61,7 @@ public class CharFuncs : MonoBehaviour {
 	
 	public int workingNum = -1;
 	public int speakNum = -1;
-	SpeechBubble speechfunc = null;
+	//SpeechBubble speechfunc = null;
 	bool speaking = false;
 	string saywhat = "";
 
@@ -58,8 +70,9 @@ public class CharFuncs : MonoBehaviour {
 		mystyle.normal.textColor = Color.white;
 		mystyle.alignment = TextAnchor.MiddleCenter;
 		thisChar = gameObject;
-		speechfunc = (SpeechBubble)thisChar.GetComponent(typeof(SpeechBubble));
+		//speechfunc = (SpeechBubble)thisChar.GetComponent(typeof(SpeechBubble));
 		speaking=false;
+		armmat = GlobalObjs.getMaterial(thisChar.name);
 		switch(this.name) {
 			case "Hamlet":
 				voice = "Alex";
@@ -94,11 +107,18 @@ public class CharFuncs : MonoBehaviour {
 		
 		curHeight = thisChar.transform.localScale.y;
 		halfHeight = curHeight/2f;
+		
+		pointing = false;
+		pointtarget = null;
+		pointertimer = 0.0f;
 	
 	}
 	
 	// Update is called once per frame - when action occurring, do something
 	void Update () {
+		if (armmat == null) {
+			armmat = GlobalObjs.getMaterial(thisChar.name);
+		}
 		if (following) {
 			// do nothing for 1 second	
 			timer += Time.deltaTime;
@@ -119,45 +139,64 @@ public class CharFuncs : MonoBehaviour {
 			if (shrinking) {
 				// scale char down
 				float samt = Mathf.Min (Time.deltaTime*sspeed, thisChar.transform.localScale.y - halfHeight); // so don't go past 10f shrinking
+				
+				if (!pickup) {
+					manipObj.transform.parent = null;
+				}
+				
 				thisChar.transform.localScale += new Vector3(0f, -1*samt, 0f);
-				//if (!pickup) { // if putting down, handle object while shrinking also
+				
+				if (!pickup) { // if putting down, handle object while shrinking also
+					//manipObj.transform.localScale = new Vector3(1f,1f,1f);
 				//	manipObj.transform.localScale += new Vector3(0f, 1*samt, 0f);
-				//}
+					Debug.Log ("Shrink size="+thisChar.renderer.bounds.size.y);
+					manipObj.transform.position = new Vector3(manipObj.transform.position.x, (.5f + thisChar.renderer.bounds.size.y) - 3f, manipObj.transform.position.z);
+					manipObj.transform.parent = thisChar.transform;
+				}
 				if (thisChar.transform.localScale.y <= halfHeight) {
 					Debug.Log ("Done shrinking "+thisChar.name);
 					// move object, attach later -- need to figure out the right position better here
-					Vector3 temp = thisChar.transform.position + thisChar.transform.right.normalized*holdwhere;
+					Vector3 temp = thisChar.transform.position + thisChar.transform.right.normalized*-1*holdwhere;
 					manipObj.transform.position = new Vector3 (temp.x, carrydropheight, temp.z);//thisChar.transform.position + thisChar.transform.right.normalized*holdwhere;
 					//new Vector3(thisChar.transform.position.x+.35f, 0, thisChar.transform.position.z);
 					//manipObj.transform.position.y = carrydropheight;
 					manipObj.transform.rotation = thisChar.transform.rotation;
 					shrinking = false; // done shrinking
-					/*if (pickup) { // attach object
+					if (pickup) { // attach object
 						manipObj.transform.parent = thisChar.transform;
-						manipObj.transform.localPosition=new Vector3(.5f, 0f, 0f); // put it to char's right side
-						manipObj.transform.localRotation=Quaternion.identity; // keep same rotation as char
+						curscalesize = manipObj.transform.localScale;
+						//manipObj.transform.localPosition=new Vector3(.5f, 0f, 0f); // put it to char's right side
+						//manipObj.transform.localRotation=Quaternion.identity; // keep same rotation as char
 						Debug.Log ("Attached object");
 					} else { // detach object
-						thisChar.transform.DetachChildren();
+						manipObj.transform.parent = null;
 						Debug.Log ("Detached object");
 						//manipObj.transform.parent = null;
-					}*/
+					}
 					growing = true; // start growing
 					//Debug.Log ("Ready to grow");
 				}
 			}
 			if (growing) {
 				float gamt = Mathf.Min (Time.deltaTime*sspeed, curHeight - thisChar.transform.localScale.y); // so don't grow past 20f
+				if (pickup) {
+					manipObj.transform.parent = null;
+				}
 				thisChar.transform.localScale += new Vector3(0f, 1*gamt, 0f);
-				//if (pickup) { // if picking up, handle object while growing also
+				
+				if (pickup) { // if picking up, handle object while growing also
 				//	manipObj.transform.localScale += new Vector3(0f, -1*gamt, 0f);
-				//}
+					//manipObj.transform.localScale = new Vector3(1f,1f,1f);
+					Debug.Log ("Size="+thisChar.renderer.bounds.size.y);
+					manipObj.transform.position = new Vector3(manipObj.transform.position.x, (.5f + thisChar.renderer.bounds.size.y) - 3f, manipObj.transform.position.z);
+					manipObj.transform.parent = thisChar.transform;
+				}
 				if (thisChar.transform.localScale.y >= curHeight) {
 					Debug.Log ("Done growing "+thisChar.name);
 					// attach if picking up
-					if (pickup) {
-						manipObj.transform.parent = thisChar.transform;
-					}
+					//if (pickup) {
+					//	manipObj.transform.parent = thisChar.transform;
+					//}
 					growing = false; // done growing
 					manipObj = null;
 					GlobalObjs.removeOne(workingNum);
@@ -170,7 +209,7 @@ public class CharFuncs : MonoBehaviour {
 				Debug.Log ("Done Speaking at "+Time.time+" for "+thisChar.name);
 				myProcess.Close ();
 				myProcess = null;
-				speechfunc.showbubble = false;
+				//speechfunc.showbubble = false;
 				speaking=false;
 				saywhat = "";
 				GlobalObjs.removeOne(speakNum);
@@ -191,16 +230,16 @@ public class CharFuncs : MonoBehaviour {
 				}
 				float howmuch = rotateDir*Time.deltaTime*rspeed;
 				float diff = getAngle(rotateTo);
-				//Debug.Log ("Howmuch="+howmuch+", diff="+diff);
+				Debug.Log ("Howmuch="+howmuch+", diff="+diff+" for "+thisChar.name+" rotating");
 				if (Mathf.Abs (diff) < Mathf.Abs (howmuch)) {
 					howmuch = rotateDir*diff;
-					//Debug.Log ("Smaller distance!"+diff);
+					Debug.Log ("Smaller distance!"+diff+" for "+thisChar.name+"rotating");
 					shortenrotate = true;
 				}
 				thisChar.transform.Rotate (Vector3.up * howmuch);	
 				//Debug.Log ("Rotated " + howmuch + " for " + thisChar.name);
 				if (Mathf.RoundToInt(getAngle(rotateTo)*10) == 0 || shortenrotate) { 
-					//Debug.Log ("In finish rotating on update and rotate="+rotating+" moving="+moving+" for "+thisChar.name);
+					Debug.Log ("In finish rotating on update and rotate="+rotating+" moving="+moving+" for "+thisChar.name);
 					// remove from global queue!
 					shortenrotate = false;
 					if (!moving) {
@@ -211,110 +250,114 @@ public class CharFuncs : MonoBehaviour {
 						GlobalObjs.removeOne(workingNum);
 						//workingNum = -1;
 						//Debug.Log ("Reset working num in update rotating stopping section to "+workingNum +" for "+thisChar.name);
-					}
-					if (rotateQueue.Count > 0) {
-						rotating = true;
-						rotateTo = nullVector;
-						rotateToObj = null;
-						rotateDir = 1;
-						miniQueueObj pulled = (miniQueueObj)rotateQueue.Dequeue();
-						workingNum = pulled.msgnum;
-						//Debug.Log ("Changed working num in update rotating retrieve next in queue to "+workingNum+" for "+thisChar.name);
-						if (pulled.getTargetType() == "Vector3") {
-							rotateTo = pulled.targetpt; 
+					
+						if (rotateQueue.Count > 0) {
+							rotating = true;
+							rotateTo = nullVector;
 							rotateToObj = null;
-							rotateDir = getDirection (rotateTo);
-						} else {
-							rotateToObj = pulled.target;
-							rotateTo = new Vector3(rotateToObj.transform.position.x, 0, rotateToObj.transform.position.z);
-							rotateDir = getDirection(rotateTo);
-						}
-						
-						Debug.Log ("Dequeued for " + thisChar.name + " value="+rotateTo);
-					} else {
-						rotating = false;
-						rotateTo = nullVector;
-						rotateToObj = null;
-						rotateDir = 1;
-						Debug.Log ("Done Rotating for " + thisChar.name);
-						// check to see if need to do a move now!!
-						if (moving) {
-							// start moving!
-							// first check if turned the right direction, else rotate before moving
-							// might not need this
-							waitToRotate = false;
-						} else if (moveQueue.Count > 0) {
-							//GlobalObjs.removeOne(workingNum);
-							// in case a movement got queued after a look
-							Debug.Log ("Another item in move queue after rotate for "+thisChar.name);
-							moving = true;
-							moveTo = nullVector;
-							moveToObj = null;
-							waitToRotate = false;
-							miniQueueObj pulled = (miniQueueObj)moveQueue.Dequeue();
-							following = pulled.following;
+							rotateDir = 1;
+							miniQueueObj pulled = (miniQueueObj)rotateQueue.Dequeue();
 							workingNum = pulled.msgnum;
-							Debug.Log ("*********************Dequeued "+workingNum +" for "+thisChar.name);
+							//Debug.Log ("Changed working num in update rotating retrieve next in queue to "+workingNum+" for "+thisChar.name);
 							if (pulled.getTargetType() == "Vector3") {
-								moveTo = pulled.targetpt; 
-								moveToObj = null;
-								if (getAngle(moveTo) == 0) {
-									waitToRotate = false;
-								} else {
-									waitToRotate = true; // need to check if need to rotate first
-									rotating = true;
-									rotateTo = moveTo; 
-									rotateToObj = null;
-									rotateDir = getDirection (rotateTo);
-								}
+								rotateTo = pulled.targetpt; 
+								rotateToObj = null;
+								rotateDir = getDirection (rotateTo);
 							} else {
-								moveToObj = pulled.target;
-								moveTo = calculateObjPostn(moveToObj);//new Vector3(moveToObj.transform.position.x, 0, moveToObj.transform.position.z);
-								if (getAngle (moveTo) == 0) {
-									waitToRotate = false;
-								} else {
-									waitToRotate = true; // need to check if need to rotate first
-									rotating = true;
-									rotateTo = moveTo;
-									rotateToObj = moveToObj;
-									rotateDir = getDirection (rotateTo);
-								}
+								rotateToObj = pulled.target;
+								rotateTo = new Vector3(rotateToObj.transform.position.x, 0, rotateToObj.transform.position.z);
+								rotateDir = getDirection(rotateTo);
 							}
 							
-							Debug.Log ("Dequeued move for " + thisChar.name + " value="+moveTo);
+							Debug.Log ("Dequeued for " + thisChar.name + " value="+rotateTo);
+						} 
+					}
+
+					rotating = false;
+					rotateTo = nullVector;
+					rotateToObj = null;
+					rotateDir = 1;
+					Debug.Log ("Done Rotating for " + thisChar.name);
+					// check to see if need to do a move now!!
+					if (moving) {
+						// start moving!
+						// first check if turned the right direction, else rotate before moving
+						// might not need this
+						waitToRotate = false;
+					} else if (moveQueue.Count > 0) {
+						//GlobalObjs.removeOne(workingNum);
+						// in case a movement got queued after a look
+						Debug.Log ("Another item in move queue after rotate for "+thisChar.name);
+						moving = true;
+						moveTo = nullVector;
+						moveToObj = null;
+						waitToRotate = false;
+						miniQueueObj pulled = (miniQueueObj)moveQueue.Dequeue();
+						following = pulled.following;
+						workingNum = pulled.msgnum;
+						Debug.Log ("*********************Dequeued "+workingNum +" for "+thisChar.name);
+						if (pulled.getTargetType() == "Vector3") {
+							moveTo = pulled.targetpt; 
+							moveToObj = null;
+							if (getAngle(moveTo) == 0) {
+								waitToRotate = false;
+							} else {
+								waitToRotate = true; // need to check if need to rotate first
+								rotating = true;
+								rotateTo = moveTo; 
+								rotateToObj = null;
+								rotateDir = getDirection (rotateTo);
+							}
+						} else {
+							moveToObj = pulled.target;
+							moveTo = calculateObjPostn(moveToObj);//new Vector3(moveToObj.transform.position.x, 0, moveToObj.transform.position.z);
+							if (getAngle (moveTo) == 0) {
+								waitToRotate = false;
+							} else {
+								waitToRotate = true; // need to check if need to rotate first
+								rotating = true;
+								rotateTo = moveTo;
+								rotateToObj = moveToObj;
+								rotateDir = getDirection (rotateTo);
+							}
 						}
+						
+						Debug.Log ("Dequeued move for " + thisChar.name + " value="+moveTo);
+					
 					}
 				}
 			}
-			if (moving && !rotating) { // make sure not rotating before do the move!
+			if (moving ) { //&& !rotating) { // make sure not rotating before do the move!
 				// do movement based on Time.deltaTime*mspeed
-				//Debug.Log ("Moving one step");
+				Debug.Log ("Moving one step for "+thisChar.name);
 				// check if object moved!
 				if (moveToObj == null) {
 					// no need to change
 				} else {
 					// check if object moved & if so, do a single rotate of full distance (since shouldn't be much) before of moving!
-					//Debug.Log ("Need to turn more first");
+					Debug.Log ("Need to turn more first");
 					rotateTo = calculateObjPostn(moveToObj);//new Vector3(moveToObj.transform.position.x, 0, moveToObj.transform.position.z);
 					int temprotateDir = getDirection (rotateTo);
 					//float temprotateAmt = getAngle (rotateTo);
-					transform.Rotate (Vector3.up * temprotateDir * getAngle (rotateTo));
+					if (!rotating) {
+						transform.Rotate (Vector3.up * temprotateDir * getAngle (rotateTo));
+					}
 					moveTo = calculateObjPostn(moveToObj);//new Vector3(moveToObj.transform.position.x, 0, moveToObj.transform.position.z);
 				}
 				float howfar = Time.deltaTime * mspeed;
 				float diffdist = getDist(moveTo);
 				//if(thisChar.name == "GraveDiggerTwo") {
-				//	Debug.Log ("howfar="+howfar+", Diff="+diffdist);
+					Debug.Log ("howfar="+howfar+", Diff="+diffdist+" for "+thisChar.name+" moving !rotating");
 				//}
 				if (Mathf.Abs (diffdist) < Mathf.Abs(howfar)) {
 					howfar = Mathf.Abs(diffdist); // shouldn't matter direction since always moving forward
-					//Debug.Log ("Stopping early "+howfar);
+					Debug.Log ("Stopping early "+howfar+" for "+thisChar.name+" moving !rotating");
 					shortenmove = true;
 				}
 	//			thisChar.transform.Translate(thisChar.transform.forward * howfar);
 				thisChar.transform.position += -1*howfar*thisChar.transform.forward;
-				//Debug.Log ("Cur Location="+thisChar.transform.position);
-				//Debug.Log ("Cur Destination="+moveTo);
+				Debug.Log ("Cur Location="+thisChar.transform.position+" for "+thisChar.name+" moving");
+				Debug.Log ("Cur Destination="+moveTo+" for "+thisChar.name+" moving");
 				// will need to check if movequeue is not empty after finish a rotate
 				if (Mathf.RoundToInt (getDist(moveTo)*10) == 0 || shortenmove) { // check if going to bump into other char & if so, stop earlier
 					// remove from global queue!
@@ -393,6 +436,47 @@ public class CharFuncs : MonoBehaviour {
 				}
 			}
 		}
+		if (pointing) {
+			pointertimer += Time.deltaTime;
+			if (pointertimer >= pointertimerMax) {
+				// done pointing
+				pointertimer = 0.0f;
+				pointing = false;
+				// detach arm
+				arm.transform.parent = null;
+				// delete arm
+				Destroy (arm);
+				pointtarget = null;
+				arm = null;
+				GlobalObjs.removeOne(pointnum);
+			} else {
+				// update arm as needed to point to target if char or target moved
+				Vector3 relativePoint = thisChar.transform.InverseTransformPoint(pointtarget.transform.position);
+				if (relativePoint.x < 0.0f) {
+					left = true;
+				} else {
+					left = false;
+				}
+				Vector3 correctedstart;
+				if (!left) {
+					correctedstart = thisChar.transform.position + thisChar.transform.right.normalized;
+				} else {
+					correctedstart = thisChar.transform.position - thisChar.transform.right.normalized;
+				}
+				Vector3 newstart = new Vector3(correctedstart.x, 3.5f, correctedstart.z);
+				Vector3 offset = pointtarget.transform.position - newstart;
+				//Vector3 scale = new Vector3(0.5f, 2.0f, 0.5f);
+				Vector3 position = newstart + (offset / 2.0f);
+				//GameObject myarm = Instantiate (prefabarm, position, Quaternion.identity) as GameObject;
+				//arm.transform.localScale = new Vector3(.5f, 1f, .5f);
+				arm.transform.position = newstart+ offset.normalized;
+				arm.transform.up = offset;
+				//myarm.renderer.material = armmat;
+				// need to attach to character so can move with character
+				//myarm.transform.parent = thisChar.transform;
+				//myarm.transform.localScale = scale;
+			}
+		}
 	
 	}
 	
@@ -402,7 +486,7 @@ public class CharFuncs : MonoBehaviour {
 		// add to global queue!!!
 		// add to global queue
 		GlobalObjs.printQueue("Start Rotate "+thisChar.name);
-		//Debug.Log ("Rotate="+rotating+" Move="+moving+" for "+thisChar.name);
+		Debug.Log ("Rotate="+rotating+" Move="+moving+" for "+thisChar.name);
 		QueueObj temp = new QueueObj(thisChar, towhatobj, (towhatobj == null)?(new Vector3(towherex, 0, towherey)):(towhatobj.transform.position), QueueObj.actiontype.rotate);
 		GlobalObjs.globalQueue.Add(temp);
 		
@@ -429,9 +513,9 @@ public class CharFuncs : MonoBehaviour {
 				rotateToObj = towhatobj;
 				rotateDir = getDirection (rotateTo);
 			}
-			//Debug.Log ("Starting rotation to " + towhatobj + " for " + this.name);
+			Debug.Log ("Starting rotation to " + towhatobj + " for " + this.name);
 		}
-		//Debug.Log ("END Rotate with Rotate="+rotating+" Move="+moving+" for "+thisChar.name+" msg="+temp.msgNum);
+		Debug.Log ("END Rotate with Rotate="+rotating+" Move="+moving+" for "+thisChar.name+" msg="+temp.msgNum);
 		GlobalObjs.printQueue("End Rotate "+thisChar.name);
 		
 	}
@@ -443,7 +527,7 @@ public class CharFuncs : MonoBehaviour {
 		GlobalObjs.globalQueue.Add(temp);
 		Debug.Log ("*********************Added "+temp.msgNum+" for "+thisChar.name);
 		// do something
-		//Debug.Log("In doWalk for "+thisChar.name);
+		Debug.Log("In doWalk for "+thisChar.name);
 		if (moving) {
 			// wait & try again when done moving
 			Debug.Log ("Already Walking for "+thisChar.name);
@@ -463,7 +547,7 @@ public class CharFuncs : MonoBehaviour {
 		} else {
 			workingNum = temp.msgNum;//temp.msgNum;
 			following = tofollow;
-			//Debug.Log ("Starting walk with workingnum="+temp.msgNum+ " for "+thisChar.name);
+			Debug.Log ("Starting walk with workingnum="+temp.msgNum+ " for "+thisChar.name);
 			moving = true;
 			Debug.Log ("No queue or rotation occurring for "+thisChar.name);
 			if (towhatobj == null) {
@@ -495,9 +579,9 @@ public class CharFuncs : MonoBehaviour {
 				}
 				moving = true;
 			}
-			//Debug.Log ("Starting walk with rotate to " + x + ", "+ y +" with working #="+workingNum+" for "+thisChar.name);
+			Debug.Log ("Starting walk with rotate to " + x + ", "+ y +" with working #="+workingNum+" for "+thisChar.name);
 		}
-		//Debug.Log ("END Walk with Rotate="+rotating+" Move="+moving+" for "+thisChar.name+" num="+temp.msgNum);
+		Debug.Log ("END Walk with Rotate="+rotating+" Move="+moving+" for "+thisChar.name+" num="+temp.msgNum);
 		GlobalObjs.printQueue("End Walk "+thisChar.name);
 	}
 	
@@ -524,7 +608,7 @@ public class CharFuncs : MonoBehaviour {
 		QueueObj temp = new QueueObj(thisChar, null, nullVector, QueueObj.actiontype.speak);
 		GlobalObjs.globalQueue.Add(temp);
 		speakNum = temp.msgNum;
-		speechfunc.showbubble = true;
+		//speechfunc.showbubble = true;
 		saywhat = toSay;
 		//Debug.Log ("Said:"+toSay);	
 		// clean up all ' and " to be /' and /"
@@ -585,6 +669,7 @@ public class CharFuncs : MonoBehaviour {
 		shrinking = true;
 		manipObj = obj;
 		pickup = true;
+		curscalesize = obj.transform.localScale;
 	}
 	
 	public void doPutDown() {
@@ -598,7 +683,26 @@ public class CharFuncs : MonoBehaviour {
 			workingNum = temp.msgNum;
 			//Debug.Log ("Changed working num in doPutDown to "+workingNum+ " for " +thisChar.name);
 			shrinking = true;
-			manipObj = thisChar.transform.GetChild(0).gameObject;
+			// figure out what object we are carrying
+			if (thisChar.transform.childCount == 0) {
+				// error no children
+				Debug.Log ("No object to put down!");
+			} else if (thisChar.transform.childCount == 1) {
+				if (thisChar.transform.GetChild(0).gameObject.name == "ArmPrefab") {
+					// no children
+					Debug.Log ("Only child is an arm!");
+				} else {
+					manipObj = thisChar.transform.GetChild (0).gameObject;
+				}
+			} else {
+				if (thisChar.transform.GetChild (0).gameObject.name == "ArmPrefab") {
+					manipObj = thisChar.transform.GetChild (1).gameObject;
+				} else {
+					manipObj = thisChar.transform.GetChild (0).gameObject;
+				}
+			}
+			
+			//manipObj = thisChar.transform.GetChild(0).gameObject;
 			pickup = false;
 			Vector3 curpostn = manipObj.transform.position;
 			Quaternion currot = manipObj.transform.rotation;
@@ -608,7 +712,7 @@ public class CharFuncs : MonoBehaviour {
 			//Debug.Log ("parent local="+thisChar.transform.localPosition);
 			//manipObj.transform.position = thisChar.transform.right.normalized*.35f;//new Vector3(thisChar.transform.position.x+.35f, 0, thisChar.transform.position.z);
 			//manipObj.transform.rotation = thisChar.transform.rotation;
-			thisChar.transform.DetachChildren();
+//			thisChar.transform.DetachChildren();
 			//Debug.Log("after manip local="+manipObj.transform.localPosition);
 			//Debug.Log ("after manip postn="+manipObj.transform.position);
 			//Debug.Log ("after parent postn="+thisChar.transform.position);
@@ -617,6 +721,7 @@ public class CharFuncs : MonoBehaviour {
 			//thisChar.transform.right.normalized*.35f;//new Vector3(thisChar.transform.position.x+.35f, 0, thisChar.transform.position.z);
 			//manipObj.transform.position.y = carrydropheight;
 			manipObj.transform.rotation = currot;//thisChar.transform.rotation;
+			curscalesize = manipObj.transform.localScale;
 			
 		}
 	}
@@ -658,14 +763,14 @@ public class CharFuncs : MonoBehaviour {
 			Vector3 ptheight = Camera.main.WorldToScreenPoint(thisChar.transform.position + new Vector3(0f, 40f, 0f));
 			Vector3 ptheightabove = Camera.main.WorldToScreenPoint(thisChar.transform.position + new Vector3(0f, 41f, 0f));
 			Vector3 pt = Camera.main.WorldToScreenPoint(thisChar.transform.position);
-			Debug.Log ("ph="+ptheight+", pha="+ptheightabove+", p="+pt);
+			//Debug.Log ("ph="+ptheight+", pha="+ptheightabove+", p="+pt);
 			float heightdiff = ptheight.y - pt.y;
 			float width = (2f/40f) * heightdiff;
 			float bubbleheight = 1.15f * width;
 			float bubblewidth = width;
 			float startbubbley = pt.y +(bubbleheight/2);//ptheight.y;//Screen.height - ptheightabove.y -25f;
 			float startbubblex = ptheight.x - (.4f*width);
-			Debug.Log ("hd="+heightdiff+", w="+width+",bh="+bubbleheight+", bw="+bubblewidth+", sby="+startbubbley+", sbx="+startbubblex);
+			//Debug.Log ("hd="+heightdiff+", w="+width+",bh="+bubbleheight+", bw="+bubblewidth+", sby="+startbubbley+", sbx="+startbubblex);
 			GUI.DrawTexture(new Rect(startbubblex, startbubbley, bubblewidth, bubbleheight), bubbleTexture, ScaleMode.ScaleToFit, true, 0f);
 			//GUI.Label (new Rect(startbubblex, ptheight.y, 30,30), "H");
 			//GUI.Label (new Rect(startbubblex, ptheightabove.y, 30, 30), "A");
@@ -673,4 +778,40 @@ public class CharFuncs : MonoBehaviour {
 			//GUI.Label (new Rect(startbubblex, Screen.height-ptheight.y, 30,30), "S");
 		}
 	}
+	
+	public void doPoint(GameObject target) {
+		QueueObj temp = new QueueObj(thisChar, target, target.transform.position, QueueObj.actiontype.point);
+		GlobalObjs.globalQueue.Add(temp);
+		pointnum = temp.msgNum;
+		pointing = true;
+		pointertimer = 0.0f;
+		pointtarget = target;
+		Vector3 relativePoint = thisChar.transform.InverseTransformPoint(pointtarget.transform.position);
+		if (relativePoint.x < 0.0f) {
+			left = true;
+		} else {
+			left = false;
+		}
+		Vector3 correctedstart;
+		if (!left) {
+			correctedstart = thisChar.transform.position + thisChar.transform.right.normalized;
+		} else {
+			correctedstart = thisChar.transform.position - thisChar.transform.right.normalized;
+		}
+		Vector3 newstart = new Vector3(correctedstart.x, 3.5f, correctedstart.z);
+		Vector3 offset = target.transform.position - newstart;
+		//Vector3 scale = new Vector3(0.5f, 2.0f, 0.5f);
+		Vector3 position = newstart + (offset / 2.0f);
+		GameObject myarm = Instantiate (prefabarm, position, Quaternion.identity) as GameObject;
+		arm = myarm;
+		myarm.transform.localScale = new Vector3(.5f, 1f, .5f);
+		myarm.transform.position = newstart+ offset.normalized;
+		myarm.transform.up = offset;
+		Debug.Log ("Material name="+armmat.name);
+		myarm.renderer.material = armmat;
+		// need to attach to character so can move with character
+		myarm.transform.parent = thisChar.transform;
+		//myarm.transform.localScale = scale;
+	}
+	
 }

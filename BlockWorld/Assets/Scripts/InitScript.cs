@@ -166,7 +166,7 @@ public class InitScript : MonoBehaviour {
 			if (GUI.Button (new Rect(25, 150, 100, 30), "Pickup")) {
 				Debug.Log ("Pickup");
 				//shrinking = true;
-				GlobalObjs.HamletFunc.doPickup(GlobalObjs.Box);//.animation.Play("Shrink");
+				GlobalObjs.HamletFunc.doPickup(GlobalObjs.Lantern);//.animation.Play("Shrink");
 			}
 			if (GUI.Button (new Rect(25, 190, 100, 30), "Putdown")) {
 				Debug.Log ("Putdown");
@@ -175,6 +175,10 @@ public class InitScript : MonoBehaviour {
 			if (GUI.Button (new Rect(25, 230, 100, 30), "Follow")) {
 				Debug.Log ("Following");
 				GlobalObjs.GraveDiggerTwoFunc.doWalk (GlobalObjs.GraveDigger.transform.position.x, GlobalObjs.GraveDigger.transform.position.z, GlobalObjs.GraveDigger, true);
+			}
+			if (GUI.Button (new Rect(25, 270, 100, 30), "Point")) {
+				Debug.Log ("Pointing");
+				GlobalObjs.HamletFunc.doPoint (GlobalObjs.Skull1);
 			}
 			
 			//bool useBML = GUI.Toggle(new Rect(500, 30, 100, 30), BML, "Use BML File?");
@@ -378,6 +382,13 @@ public class InitScript : MonoBehaviour {
 				who.doRotate(target.transform.position.x, target.transform.position.z, target);
 			} else {
 				who.doRotate(targetx, targety, null);
+			}
+		} else if (xmltxt.Contains ("POINT")) {
+			Debug.Log ("Action=point");
+			if (target != null) {
+				who.doPoint(target);
+			} else {
+				Debug.Log ("Error no target");
 			}
 		} else {
 			Debug.Log ("Error - unknown command");

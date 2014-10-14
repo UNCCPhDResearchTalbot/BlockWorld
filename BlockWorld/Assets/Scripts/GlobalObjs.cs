@@ -1,6 +1,9 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class GlobalObjs : MonoBehaviour
 {
@@ -104,6 +107,13 @@ public class GlobalObjs : MonoBehaviour
 			//Box = templist[0];
 			templist = null;
 		}*/
+		
+		#if UNITY_EDITOR
+            Material m = AssetDatabase.LoadAssetAtPath("Assets/Materials/Hamletmat.mat", typeof(Material)) as Material;
+            m = AssetDatabase.LoadAssetAtPath("Assets/Materials/Horatiomat.mat", typeof(Material)) as Material;
+            m = AssetDatabase.LoadAssetAtPath("Assets/Materials/GraveDiggermat.mat", typeof(Material)) as Material;
+            m = AssetDatabase.LoadAssetAtPath("Assets/Materials/GraveDiggerTwomat.mat", typeof(Material)) as Material;
+			#endif
 	}
 	
 	// Update is called once per frame
@@ -290,6 +300,8 @@ public class GlobalObjs : MonoBehaviour
 		}
 		if (GlobalObjs.globalQueue[removethis].action == QueueObj.actiontype.speak) {
 			GlobalObjs.globalQueue[removethis].actorFunc.speakNum = -1;
+		} else if (GlobalObjs.globalQueue[removethis].action == QueueObj.actiontype.point) {
+			GlobalObjs.globalQueue[removethis].actorFunc.pointnum = -1;
 		} else {
 			GlobalObjs.globalQueue[removethis].actorFunc.workingNum = -1;
 		}
@@ -310,12 +322,22 @@ public class GlobalObjs : MonoBehaviour
 	}
 	
 	public static void printQueue(string msg) {
-		//Debug.Log ("*****Left in Queue:"+msg);
-			//for (int j=0; j < GlobalObjs.globalQueue.Count; j++) {
-			//	Debug.Log (GlobalObjs.globalQueue[j].msgNum+" - " +GlobalObjs.globalQueue[j].actorObj.name + " " + GlobalObjs.globalQueue[j].action.ToString());
-			//}
-			//Debug.Log ("*****End of Left in Queue"+msg);
+		Debug.Log ("*****Left in Queue:"+msg);
+			for (int j=0; j < GlobalObjs.globalQueue.Count; j++) {
+				Debug.Log (GlobalObjs.globalQueue[j].msgNum+" - " +GlobalObjs.globalQueue[j].actorObj.name + " " + GlobalObjs.globalQueue[j].action.ToString());
+			}
+			Debug.Log ("*****End of Left in Queue"+msg);
 	}
 	
+	public static Material getMaterial(string name) {
+		foreach(Material myMaterial in  Resources.FindObjectsOfTypeAll(typeof(Material))) {
+            //Debug.Log ("Material="+myMaterial.name);
+            if (myMaterial.name == name+"mat") {
+                return myMaterial;
+                //Debug.Log ("Found "+findWhichMaterialmb1);
+            }
+        }
+		return null;
+	}
 }
 

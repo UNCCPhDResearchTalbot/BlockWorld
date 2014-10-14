@@ -14,6 +14,7 @@ public class QueueObj : MonoBehaviour {
 		speak,
 		pickup,
 		putdown,
+		point,
 		other
 	};
 	public static int curMsg = 0;
