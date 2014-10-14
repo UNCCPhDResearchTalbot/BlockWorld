@@ -20,7 +20,7 @@ public class CharFuncs : MonoBehaviour {
 	int rotateDir; // 1 to turn clockwise, -1 to turn counterclockwise
 	bool rotating; // true if currently rotating
 	Queue rotateQueue; // if already rotating, additional rotateInfo - stored in Vector2 or GameObject
-	static float rspeed = 30;
+	static float rspeed = 50;//30;
 	
 	// variables for the move
 	Vector3 moveTo;
@@ -149,7 +149,7 @@ public class CharFuncs : MonoBehaviour {
 				if (!pickup) { // if putting down, handle object while shrinking also
 					//manipObj.transform.localScale = new Vector3(1f,1f,1f);
 				//	manipObj.transform.localScale += new Vector3(0f, 1*samt, 0f);
-					Debug.Log ("Shrink size="+thisChar.renderer.bounds.size.y);
+					//Debug.Log ("Shrink size="+thisChar.renderer.bounds.size.y);
 					manipObj.transform.position = new Vector3(manipObj.transform.position.x, (.5f + thisChar.renderer.bounds.size.y) - 3f, manipObj.transform.position.z);
 					manipObj.transform.parent = thisChar.transform;
 				}
@@ -187,7 +187,7 @@ public class CharFuncs : MonoBehaviour {
 				if (pickup) { // if picking up, handle object while growing also
 				//	manipObj.transform.localScale += new Vector3(0f, -1*gamt, 0f);
 					//manipObj.transform.localScale = new Vector3(1f,1f,1f);
-					Debug.Log ("Size="+thisChar.renderer.bounds.size.y);
+					//Debug.Log ("Size="+thisChar.renderer.bounds.size.y);
 					manipObj.transform.position = new Vector3(manipObj.transform.position.x, (.5f + thisChar.renderer.bounds.size.y) - 3f, manipObj.transform.position.z);
 					manipObj.transform.parent = thisChar.transform;
 				}
@@ -230,16 +230,16 @@ public class CharFuncs : MonoBehaviour {
 				}
 				float howmuch = rotateDir*Time.deltaTime*rspeed;
 				float diff = getAngle(rotateTo);
-				Debug.Log ("Howmuch="+howmuch+", diff="+diff+" for "+thisChar.name+" rotating");
+				//Debug.Log ("Howmuch="+howmuch+", diff="+diff+" for "+thisChar.name+" rotating");
 				if (Mathf.Abs (diff) < Mathf.Abs (howmuch)) {
 					howmuch = rotateDir*diff;
-					Debug.Log ("Smaller distance!"+diff+" for "+thisChar.name+"rotating");
+					//Debug.Log ("Smaller distance!"+diff+" for "+thisChar.name+"rotating");
 					shortenrotate = true;
 				}
 				thisChar.transform.Rotate (Vector3.up * howmuch);	
 				//Debug.Log ("Rotated " + howmuch + " for " + thisChar.name);
 				if (Mathf.RoundToInt(getAngle(rotateTo)*10) == 0 || shortenrotate) { 
-					Debug.Log ("In finish rotating on update and rotate="+rotating+" moving="+moving+" for "+thisChar.name);
+					//Debug.Log ("In finish rotating on update and rotate="+rotating+" moving="+moving+" for "+thisChar.name);
 					// remove from global queue!
 					shortenrotate = false;
 					if (!moving) {
@@ -329,7 +329,7 @@ public class CharFuncs : MonoBehaviour {
 			}
 			if (moving ) { //&& !rotating) { // make sure not rotating before do the move!
 				// do movement based on Time.deltaTime*mspeed
-				Debug.Log ("Moving one step for "+thisChar.name);
+				//Debug.Log ("Moving one step for "+thisChar.name);
 				// check if object moved!
 				if (moveToObj == null) {
 					// no need to change
@@ -345,19 +345,22 @@ public class CharFuncs : MonoBehaviour {
 					moveTo = calculateObjPostn(moveToObj);//new Vector3(moveToObj.transform.position.x, 0, moveToObj.transform.position.z);
 				}
 				float howfar = Time.deltaTime * mspeed;
+				if (rotating) {
+					howfar = 2.0f*howfar/3.0f;
+				} // move slower when turning so don't do a big circle
 				float diffdist = getDist(moveTo);
 				//if(thisChar.name == "GraveDiggerTwo") {
-					Debug.Log ("howfar="+howfar+", Diff="+diffdist+" for "+thisChar.name+" moving !rotating");
+					//Debug.Log ("howfar="+howfar+", Diff="+diffdist+" for "+thisChar.name+" moving !rotating");
 				//}
 				if (Mathf.Abs (diffdist) < Mathf.Abs(howfar)) {
 					howfar = Mathf.Abs(diffdist); // shouldn't matter direction since always moving forward
-					Debug.Log ("Stopping early "+howfar+" for "+thisChar.name+" moving !rotating");
+					//Debug.Log ("Stopping early "+howfar+" for "+thisChar.name+" moving !rotating");
 					shortenmove = true;
 				}
 	//			thisChar.transform.Translate(thisChar.transform.forward * howfar);
 				thisChar.transform.position += -1*howfar*thisChar.transform.forward;
-				Debug.Log ("Cur Location="+thisChar.transform.position+" for "+thisChar.name+" moving");
-				Debug.Log ("Cur Destination="+moveTo+" for "+thisChar.name+" moving");
+				//Debug.Log ("Cur Location="+thisChar.transform.position+" for "+thisChar.name+" moving");
+				//Debug.Log ("Cur Destination="+moveTo+" for "+thisChar.name+" moving");
 				// will need to check if movequeue is not empty after finish a rotate
 				if (Mathf.RoundToInt (getDist(moveTo)*10) == 0 || shortenmove) { // check if going to bump into other char & if so, stop earlier
 					// remove from global queue!
@@ -486,7 +489,7 @@ public class CharFuncs : MonoBehaviour {
 		// add to global queue!!!
 		// add to global queue
 		GlobalObjs.printQueue("Start Rotate "+thisChar.name);
-		Debug.Log ("Rotate="+rotating+" Move="+moving+" for "+thisChar.name);
+		//Debug.Log ("Rotate="+rotating+" Move="+moving+" for "+thisChar.name);
 		QueueObj temp = new QueueObj(thisChar, towhatobj, (towhatobj == null)?(new Vector3(towherex, 0, towherey)):(towhatobj.transform.position), QueueObj.actiontype.rotate);
 		GlobalObjs.globalQueue.Add(temp);
 		
@@ -515,7 +518,7 @@ public class CharFuncs : MonoBehaviour {
 			}
 			Debug.Log ("Starting rotation to " + towhatobj + " for " + this.name);
 		}
-		Debug.Log ("END Rotate with Rotate="+rotating+" Move="+moving+" for "+thisChar.name+" msg="+temp.msgNum);
+		//Debug.Log ("END Rotate with Rotate="+rotating+" Move="+moving+" for "+thisChar.name+" msg="+temp.msgNum);
 		GlobalObjs.printQueue("End Rotate "+thisChar.name);
 		
 	}
@@ -547,7 +550,7 @@ public class CharFuncs : MonoBehaviour {
 		} else {
 			workingNum = temp.msgNum;//temp.msgNum;
 			following = tofollow;
-			Debug.Log ("Starting walk with workingnum="+temp.msgNum+ " for "+thisChar.name);
+			//Debug.Log ("Starting walk with workingnum="+temp.msgNum+ " for "+thisChar.name);
 			moving = true;
 			Debug.Log ("No queue or rotation occurring for "+thisChar.name);
 			if (towhatobj == null) {
@@ -581,7 +584,7 @@ public class CharFuncs : MonoBehaviour {
 			}
 			Debug.Log ("Starting walk with rotate to " + x + ", "+ y +" with working #="+workingNum+" for "+thisChar.name);
 		}
-		Debug.Log ("END Walk with Rotate="+rotating+" Move="+moving+" for "+thisChar.name+" num="+temp.msgNum);
+		//Debug.Log ("END Walk with Rotate="+rotating+" Move="+moving+" for "+thisChar.name+" num="+temp.msgNum);
 		GlobalObjs.printQueue("End Walk "+thisChar.name);
 	}
 	
