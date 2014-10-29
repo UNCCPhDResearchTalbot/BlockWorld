@@ -117,7 +117,7 @@ public class GlobalObjs : MonoBehaviour
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
 		if (Hamlet == null) {
 			templist = GameObject.FindGameObjectsWithTag("Hamlet");
 			Hamlet = templist[0];

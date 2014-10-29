@@ -174,11 +174,22 @@ public class InitScript : MonoBehaviour {
 			}
 			if (GUI.Button (new Rect(25, 230, 100, 30), "Follow")) {
 				Debug.Log ("Following");
+				GlobalObjs.GraveDiggerFunc.doWalk (GlobalObjs.Grave.transform.position.x, GlobalObjs.Grave.transform.position.z, GlobalObjs.Grave, false);
 				GlobalObjs.GraveDiggerTwoFunc.doWalk (GlobalObjs.GraveDigger.transform.position.x, GlobalObjs.GraveDigger.transform.position.z, GlobalObjs.GraveDigger, true);
 			}
 			if (GUI.Button (new Rect(25, 270, 100, 30), "Point")) {
 				Debug.Log ("Pointing");
 				GlobalObjs.HamletFunc.doPoint (GlobalObjs.Skull1);
+			}
+			if (GUI.Button(new Rect(25, 310, 100, 30), "Check Visible")) {
+				Debug.Log ("Checking if Grave is visible");
+				GlobalObjs.HamletFunc.moveTo = GlobalObjs.Grave.transform.position;
+				Debug.Log ("Grave="+GlobalObjs.Grave.transform.position+", Hamlet="+GlobalObjs.Hamlet.transform.position);
+				Debug.Log (GlobalObjs.HamletFunc.isVisible());
+			}
+			if (GUI.Button (new Rect(25, 350, 100, 30), "Look at")) {
+				Debug.Log ("Look at Hamlet");
+				GlobalObjs.GraveDiggerFunc.doRotate(GlobalObjs.Hamlet.transform.position.x, GlobalObjs.Hamlet.transform.position.z, GlobalObjs.Hamlet);
 			}
 			
 			//bool useBML = GUI.Toggle(new Rect(500, 30, 100, 30), BML, "Use BML File?");

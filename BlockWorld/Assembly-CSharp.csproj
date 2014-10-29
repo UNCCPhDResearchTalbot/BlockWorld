@@ -48,6 +48,7 @@
      <Compile Include="Assets\Scripts\CharFuncs.cs" />
      <Compile Include="Assets\Scripts\GlobalObjs.cs" />
      <Compile Include="Assets\Scripts\InitScript.cs" />
+     <Compile Include="Assets\Scripts\NewCharScript.cs" />
      <Compile Include="Assets\Scripts\QueueObj.cs" />
      <Compile Include="Assets\Scripts\SpeechBubble.cs" />
      <Compile Include="Assets\Scripts\miniQueueObj.cs" />
