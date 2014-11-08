@@ -1,15 +1,16 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/InitScript.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Files/InputFile.txt">
     <Files>
-      <File FileName="Assets/Scripts/ChangeMaterials.cs" Line="70" Column="7" />
-      <File FileName="Assets/Scripts/GlobalObjs.cs" Line="142" Column="36" />
-      <File FileName="Assets/Scripts/CharFuncs.cs" Line="775" Column="6" />
-      <File FileName="Assets/Scripts/InitScript.cs" Line="188" Column="5" />
-      <File FileName="Assets/Scripts/QueueObj.cs" Line="19" Column="4" />
-      <File FileName="Assets/Scripts/miniQueueObj.cs" Line="32" Column="1" />
-      <File FileName="Assets/Files/InputFile.txt" Line="21" Column="200" />
+      <File FileName="Assets/Scripts/ChangeMaterials.cs" Line="18" Column="1" />
+      <File FileName="Assets/Scripts/GlobalObjs.cs" Line="412" Column="5" />
+      <File FileName="Assets/Scripts/CharFuncs.cs" Line="789" Column="31" />
+      <File FileName="Assets/Scripts/InitScript.cs" Line="164" Column="46" />
+      <File FileName="Assets/Scripts/QueueObj.cs" Line="31" Column="4" />
+      <File FileName="Assets/Scripts/miniQueueObj.cs" Line="27" Column="63" />
+      <File FileName="Assets/Files/InputFile.txt" Line="8" Column="31" />
       <File FileName="Assets/Scripts/NewCharScript.cs" Line="860" Column="3" />
+      <File FileName="Assets/Files/BMLFile.txt" Line="83" Column="371" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

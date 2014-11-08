@@ -41,6 +41,7 @@ public class CharFuncs : MonoBehaviour {
 	bool shrinking = false;
 	bool growing = false;
 	GameObject manipObj;
+	GameObject extraObj;
 	static float sspeed = 20f;
 	bool pickup = true;
 	static float carrydropheight = 0.5f;
@@ -66,6 +67,8 @@ public class CharFuncs : MonoBehaviour {
 	public int speakNum = -1;
 	bool speaking = false;
 	string saywhat = "";
+	float stimer = 0.0f;
+	float stimerMin = 3.0f;
 	
 
 	// Use this for initialization of vars
@@ -118,14 +121,17 @@ public class CharFuncs : MonoBehaviour {
 	}
 	
 	// Update is called once per frame - when action occurring, do something
-	void FixedUpdate () {
+	void Update () {
 		if (armmat == null) {
 			armmat = GlobalObjs.getMaterial(thisChar.name);
 		}
 		if (thisCharController == null) {
 			thisCharController = thisChar.GetComponent<CharacterController>();
 		}
-		if (myProcess != null && myProcess.WaitForExit(1000)) {
+		if (speaking) {
+			stimer += Time.deltaTime;
+		}
+		if (myProcess != null && myProcess.WaitForExit(1000) && stimer > stimerMin) {
 			// tell everyone I'm done speaking
 			Debug.Log ("Done Speaking at "+Time.time+" for "+thisChar.name);
 			myProcess.Close ();
@@ -133,6 +139,7 @@ public class CharFuncs : MonoBehaviour {
 			//speechfunc.showbubble = false;
 			speaking=false;
 			saywhat = "";
+			stimer = 0.0f;
 			GlobalObjs.removeOne(speakNum);
 			//speakNum = -1;
 		}
@@ -197,16 +204,24 @@ public class CharFuncs : MonoBehaviour {
 			if (!pickup) {
 				manipObj.transform.parent = null;
 			}
+			if (extraObj != null) {
+				extraObj.transform.parent = null;
+			}
 			
 			thisChar.transform.localScale += new Vector3(0f, -1*samt, 0f);
 			
-			if (!pickup) { // if putting down, handle object while shrinking also
+			if (!pickup) { // if putting down, handle object while shrinking also - be sure to put down current object if picking up a new one
 				//manipObj.transform.localScale = new Vector3(1f,1f,1f);
 			//	manipObj.transform.localScale += new Vector3(0f, 1*samt, 0f);
 				//Debug.Log ("Shrink size="+thisChar.renderer.bounds.size.y);
 				manipObj.transform.position = new Vector3(manipObj.transform.position.x, (.5f + thisChar.renderer.bounds.size.y) - 3f, manipObj.transform.position.z);
 				manipObj.transform.parent = thisChar.transform;
 			}
+			if (extraObj != null) {
+				extraObj.transform.position = new Vector3(extraObj.transform.position.x, (.5f + thisChar.renderer.bounds.size.y) - 3f, extraObj.transform.position.z);
+				extraObj.transform.parent = thisChar.transform;
+			}
+			
 			if (thisChar.transform.localScale.y <= halfHeight) {
 				Debug.Log ("Done shrinking "+thisChar.name);
 				// move object, attach later -- need to figure out the right position better here
@@ -226,6 +241,12 @@ public class CharFuncs : MonoBehaviour {
 					manipObj.transform.parent = null;
 					Debug.Log ("Detached object");
 					//manipObj.transform.parent = null;
+				}
+				if (extraObj != null) {
+					extraObj.transform.position = new Vector3(temp.x, carrydropheight, temp.z);
+					extraObj.transform.rotation = thisChar.transform.rotation;
+					extraObj.transform.parent = null;
+					extraObj = null;
 				}
 				growing = true; // start growing
 				//Debug.Log ("Ready to grow");
@@ -253,6 +274,10 @@ public class CharFuncs : MonoBehaviour {
 				growing = false; // done growing
 				manipObj = null;
 				GlobalObjs.removeOne(workingNum);
+				if (genQueue.Count > 0) {
+					getNextInMiniQueue();
+				
+				}
 				//workingNum = -1;
 				//Debug.Log ("Reset working num in update if growing to "+workingNum+ " for "+thisChar.name);
 			}
@@ -272,7 +297,24 @@ public class CharFuncs : MonoBehaviour {
 				//Debug.Log ("Smaller distance!"+diff+" for "+thisChar.name+"rotating");
 				shortenrotate = true;
 			}
-			thisChar.transform.Rotate (Vector3.up * howmuch);	
+			/*if (workingNum == 190) {
+				Debug.Log ("190 rotateobj="+rotateToObj.name+" for "+thisChar.name);//+" parent="+rotateToObj.transform.parent.name);
+				Debug.Log ("Check value="+(rotateToObj != null && rotateToObj != thisChar && rotateToObj.transform.parent != thisChar));
+				Debug.Log ("Check value name="+(rotateToObj.name != thisChar.name && ((rotateToObj.transform.parent != null && rotateToObj.transform.parent.name != thisChar.name) || rotateToObj.transform.parent == null)));//(rotateToObj != null && rotateToObj.name != thisChar.name && rotateToObj.transform.parent.name != thisChar.name));
+				Debug.Log ("Check parent="+(rotateToObj.transform.parent != thisChar));
+				//Debug.Log ("Check parent name="+(rotateToObj.transform.parent.name != thisChar.name));
+				Debug.Log ("Shortenrotate="+shortenrotate);
+			}*/
+			if ((rotateToObj != null && rotateToObj.name != thisChar.name && ((rotateToObj.transform.parent != null && rotateToObj.transform.parent.name != thisChar.name) || rotateToObj.transform.parent == null)) || rotateToObj == null) { // if ask to look at self, don't do anything OR child object
+				//Debug.Log ("Distance="+getDist (rotateTo));
+				if (getDist(rotateTo) < 1.0f) {
+					shortenrotate = true;
+				} else {
+					thisChar.transform.Rotate (Vector3.up * howmuch);	
+				}
+			} else {
+				shortenrotate = true;
+			}
 			//Debug.Log ("Rotated " + howmuch + " for " + thisChar.name);
 			if (Mathf.RoundToInt(getAngle(rotateTo)*10) == 0 || shortenrotate) { 
 				//Debug.Log ("In finish rotating on update and rotate="+rotating+" moving="+moving+" for "+thisChar.name);
@@ -298,24 +340,29 @@ public class CharFuncs : MonoBehaviour {
 			}
 			// turn towards target before moving if not facing target
 			//Debug.Log ("Angle="+getAngle(moveTo));
-			if (Mathf.RoundToInt(getAngle (moveTo)*10) != 0) {
-				//Debug.Log ("Need to turn while walking");
-				float howmuch = getDirection (moveTo)*Time.deltaTime*rspeed;
-				float diff = getAngle(moveTo);
-				//Debug.Log ("Howmuch="+howmuch+", diff="+diff+" for "+thisChar.name+" rotating");
-				if (Mathf.Abs (diff) < Mathf.Abs (howmuch)) { // so don't turn too much
-					howmuch = getDirection(moveTo)*diff;
+			if (moveToObj != null && (moveToObj == thisChar || moveToObj.transform.parent == thisChar)) {
+				// don't do the move - break out
+				shortenmove = true;
+			} else {
+				if (Mathf.RoundToInt(getAngle (moveTo)*10) != 0) { 
+					//Debug.Log ("Need to turn while walking");
+					float howmuch = getDirection (moveTo)*Time.deltaTime*rspeed;
+					float diff = getAngle(moveTo);
+					//Debug.Log ("Howmuch="+howmuch+", diff="+diff+" for "+thisChar.name+" rotating");
+					if (Mathf.Abs (diff) < Mathf.Abs (howmuch)) { // so don't turn too much
+						howmuch = getDirection(moveTo)*diff;
+					}
+					//Debug.Log ("Turning "+howmuch);
+					thisChar.transform.Rotate (Vector3.up * howmuch);	
 				}
-				//Debug.Log ("Turning "+howmuch);
-				thisChar.transform.Rotate (Vector3.up * howmuch);	
-			}
-			if (isVisible()) { // only start walking if can see target
-				Vector3 dir = thisChar.transform.position - moveTo;
-				dir = dir.normalized;
-				dir = -1f*dir.normalized; // to make them move forward
-				dir *= mspeed;
-				// need to check if distance is more than how far I am from my target
-				thisCharController.Move (dir*Time.deltaTime);
+				if (isVisible()) { // only start walking if can see target
+					Vector3 dir = thisChar.transform.position - moveTo;
+					dir = dir.normalized;
+					dir = -1f*dir.normalized; // to make them move forward
+					dir *= mspeed;
+					// need to check if distance is more than how far I am from my target
+					thisCharController.Move (dir*Time.deltaTime);
+				}
 			}
 			//Debug.Log ("Distance="+getDist (moveTo));
 			//Debug.Log ("Cur Postn="+thisChar.transform.position);
@@ -323,7 +370,7 @@ public class CharFuncs : MonoBehaviour {
 			//Debug.Log ("Dir="+dir.normalized);
 			// only stop moving if not following someone and close to target OR if following and target is still moving
 			//Debug.Log (thisChar.name+" following="+following+", getDist="+getDist (moveTo)+", beingfollowed="+(moveToObjFunc != null?moveToObjFunc.beingfollowed.ToString():"doesn't exist"));
-			if ((getDist (moveTo) < 1 && !following) || (following && getDist (moveTo) < 1 && moveToObjFunc != null && moveToObjFunc.beingfollowed == false)) {
+			if (shortenmove || (getDist (moveTo) < 1 && !following) || (following && getDist (moveTo) < 1 && moveToObjFunc != null && moveToObjFunc.beingfollowed == false)) {
 				moving = false;
 				Debug.Log ("Done Moving");
 				moveTo = nullVector;
@@ -336,10 +383,12 @@ public class CharFuncs : MonoBehaviour {
 			}
 		} else {
 			// keep looking at our rotateToObj if not null -- may have to check how close I am first?
-			if (rotateToObj != null) {
-				int myrotateDir = getDirection (new Vector3(rotateToObj.transform.position.x, 0, rotateToObj.transform.position.z));
-				float myhowmuch = getAngle(new Vector3(rotateToObj.transform.position.x, 0, rotateToObj.transform.position.z));
-				thisChar.transform.Rotate (Vector3.up*myhowmuch*myrotateDir);
+			if ((rotateToObj != null && rotateToObj.name != thisChar.name && ((rotateToObj.transform.parent != null && rotateToObj.transform.parent.name != thisChar.name) || rotateToObj.transform.parent == null)) ) {//rotateToObj != null && getDist (new Vector3(rotateToObj.transform.position.x, 0f, rotateToObj.transform.position.z)) >= 1.0f) {
+				if (getDist (new Vector3(rotateToObj.transform.position.x, 0f, rotateToObj.transform.position.z)) >= 1.0f) {
+					int myrotateDir = getDirection (new Vector3(rotateToObj.transform.position.x, 0, rotateToObj.transform.position.z));
+					float myhowmuch = getAngle(new Vector3(rotateToObj.transform.position.x, 0, rotateToObj.transform.position.z));
+					thisChar.transform.Rotate (Vector3.up*myhowmuch*myrotateDir);
+				}
 			}
 		}
 	
@@ -508,32 +557,56 @@ public class CharFuncs : MonoBehaviour {
 	}
 	
 	public void doPickup(GameObject obj) {
-		// add to global queue
-		QueueObj temp = new QueueObj(thisChar, obj, obj.transform.position, QueueObj.actiontype.pickup);
-		GlobalObjs.globalQueue.Add(temp);
-		if (moving || rotating || shrinking || growing) {
-			// wait & try again when done moving
-			Debug.Log ("Already doing something for "+thisChar.name);
-			putInMiniQueue(-1, -1, obj, temp.msgNum, false, miniQueueObj.actiontype.pickup);
+		if (obj.name.ToLower() != "skull1" && obj.name.ToLower() != "skull2" && obj.name.ToLower() != "lantern" && obj.name.ToLower () != "shovel") {
+			// not valid command - ignore
 		} else {
-			rotateToObj = null;
-			workingNum = temp.msgNum;
-			//Debug.Log ("Changed working num in doPickup to "+workingNum+ " for "+thisChar.name);
-			shrinking = true;
-			manipObj = obj;
-			pickup = true;
-			curscalesize = obj.transform.localScale;
+			// add to global queue
+			QueueObj temp = new QueueObj(thisChar, obj, obj.transform.position, QueueObj.actiontype.pickup);
+			GlobalObjs.globalQueue.Add(temp);
+			if (moving || rotating || shrinking || growing) {
+				// wait & try again when done moving
+				Debug.Log ("Already doing something for "+thisChar.name);
+				putInMiniQueue(-1, -1, obj, temp.msgNum, false, miniQueueObj.actiontype.pickup);
+			} else {
+				rotateToObj = null;
+				workingNum = temp.msgNum;
+				//Debug.Log ("Changed working num in doPickup to "+workingNum+ " for "+thisChar.name);
+				shrinking = true;
+				manipObj = obj;
+				pickup = true;
+				curscalesize = obj.transform.localScale;
+				switch (thisChar.transform.childCount) {
+					case 0:
+						break;
+					case 1:
+						if (thisChar.transform.GetChild (0).gameObject.name != "ArmPrefab") {
+							extraObj = thisChar.transform.GetChild (0).gameObject;
+						}
+						break;
+					case 2:
+						if (thisChar.transform.GetChild (0).gameObject.name != "ArmPrefab") {
+							extraObj = thisChar.transform.GetChild (0).gameObject;
+						} else if (thisChar.transform.GetChild (1).gameObject.name != "ArmPrefab") {
+							extraObj = thisChar.transform.GetChild (1).gameObject;
+						}
+						break;
+					default:
+						Debug.Log ("ERROR - too many children");
+						break;
+					
+				}
+			}
 		}
 	}
 	
-	public void doPutDown() {
+	public void doPutDown(GameObject obj) {
 		// add to global queue
-		QueueObj temp = new QueueObj(thisChar, thisChar.transform.GetChild (0).gameObject, thisChar.transform.GetChild (0).gameObject.transform.position, QueueObj.actiontype.putdown);
+		QueueObj temp = new QueueObj(thisChar, obj, obj.transform.position, QueueObj.actiontype.putdown);
 		GlobalObjs.globalQueue.Add(temp);
 		if (moving || rotating || shrinking || growing) {
 			// wait & try again when done moving
 			Debug.Log ("Already doing something for "+thisChar.name);
-			putInMiniQueue(-1, -1, null, temp.msgNum, false, miniQueueObj.actiontype.putdown);
+			putInMiniQueue(-1, -1, obj, temp.msgNum, false, miniQueueObj.actiontype.putdown);
 		} else {
 			rotateToObj = null;
 			if (thisChar.transform.GetChildCount () == 0) {
@@ -548,10 +621,15 @@ public class CharFuncs : MonoBehaviour {
 						Debug.Log ("Only child is an arm!");
 						GlobalObjs.removeOne(temp.msgNum);
 					} else {
-						workingNum = temp.msgNum;
-						//Debug.Log ("Changed working num in doPutDown to "+workingNum+ " for " +thisChar.name);
-						shrinking = true;
-						manipObj = thisChar.transform.GetChild (0).gameObject;
+						if (thisChar.transform.GetChild (0).gameObject.name == obj.name) {
+							workingNum = temp.msgNum;
+							//Debug.Log ("Changed working num in doPutDown to "+workingNum+ " for " +thisChar.name);
+							shrinking = true;
+							manipObj = thisChar.transform.GetChild (0).gameObject;
+						} else {
+							// don't have the object right now
+							GlobalObjs.removeOne(temp.msgNum);
+						}
 					}
 				} else {
 					// assume if there is two, one is definitely the object to putdown
@@ -559,19 +637,32 @@ public class CharFuncs : MonoBehaviour {
 					//Debug.Log ("Changed working num in doPutDown to "+workingNum+ " for " +thisChar.name);
 					shrinking = true;
 					if (thisChar.transform.GetChild (0).gameObject.name == "ArmPrefab") {
-						manipObj = thisChar.transform.GetChild (1).gameObject;
+						if (thisChar.transform.GetChild (1).gameObject.name == obj.name) {
+							manipObj = thisChar.transform.GetChild (1).gameObject;
+						} else {
+							shrinking = false;
+							GlobalObjs.removeOne(temp.msgNum); // don't have the right object
+						}
 					} else {
-						manipObj = thisChar.transform.GetChild (0).gameObject;
+						if (thisChar.transform.GetChild (0).gameObject.name == obj.name) {
+							manipObj = thisChar.transform.GetChild (0).gameObject;
+						} else {
+							shrinking = false;
+							GlobalObjs.removeOne(temp.msgNum); // don't have right object
+						}
 					}
 				}
 				
 				//manipObj = thisChar.transform.GetChild(0).gameObject;
 				pickup = false;
-				Vector3 curpostn = manipObj.transform.position;
-				Quaternion currot = manipObj.transform.rotation;
-				manipObj.transform.position = new Vector3(curpostn.x, carrydropheight, curpostn.z);//curpostn;
-				manipObj.transform.rotation = currot;//thisChar.transform.rotation;
-				curscalesize = manipObj.transform.localScale;
+				if (manipObj != null) {
+					Vector3 curpostn = manipObj.transform.position;
+					Quaternion currot = manipObj.transform.rotation;
+					//manipObj.transform.position = new Vector3(curpostn.x, carrydropheight, curpostn.z);//curpostn;
+
+					manipObj.transform.rotation = currot;//thisChar.transform.rotation;
+					curscalesize = manipObj.transform.localScale;
+				}
 				
 			}
 		}
@@ -698,11 +789,36 @@ public class CharFuncs : MonoBehaviour {
 				}		
 				break;
 			case miniQueueObj.actiontype.pickup:
-				shrinking = true;
-				rotateToObj = null;
-				manipObj = pulled.target;
-				pickup = true;
-				curscalesize = pulled.target.transform.localScale;
+				if (pulled.target.name.ToLower() != "skull1" && pulled.target.name.ToLower() != "skull2" && pulled.target.name.ToLower() != "lantern" && pulled.target.name.ToLower () != "shovel") {
+					// not valid command - ignore
+					GlobalObjs.removeOne(pulled.msgnum);
+				} else {
+					shrinking = true;
+					rotateToObj = null;
+					manipObj = pulled.target;
+					pickup = true;
+					curscalesize = pulled.target.transform.localScale;
+					switch (thisChar.transform.childCount) {
+						case 0:
+							break;
+						case 1:
+							if (thisChar.transform.GetChild (0).gameObject.name != "ArmPrefab") {
+								extraObj = thisChar.transform.GetChild (0).gameObject;
+							}
+							break;
+						case 2:
+							if (thisChar.transform.GetChild (0).gameObject.name != "ArmPrefab") {
+								extraObj = thisChar.transform.GetChild (0).gameObject;
+							} else if (thisChar.transform.GetChild (1).gameObject.name != "ArmPrefab") {
+								extraObj = thisChar.transform.GetChild (1).gameObject;
+							}
+							break;
+						default:
+							Debug.Log ("ERROR - too many children");
+							break;
+						
+					}
+				}
 				break;
 			case miniQueueObj.actiontype.putdown:
 				rotateToObj = null;
@@ -720,8 +836,12 @@ public class CharFuncs : MonoBehaviour {
 						} else {
 							//workingNum = pulled.msgnum;
 							//Debug.Log ("Changed working num in doPutDown to "+workingNum+ " for " +thisChar.name);
-							shrinking = true;
-							manipObj = thisChar.transform.GetChild (0).gameObject;
+							if (thisChar.transform.GetChild (0).gameObject.name == pulled.target.name) {
+								shrinking = true;
+								manipObj = thisChar.transform.GetChild (0).gameObject;
+							} else {
+								GlobalObjs.removeOne(pulled.msgnum);
+							}
 						}
 					} else {
 						// assume if there is two, one is definitely the object to putdown
@@ -729,20 +849,33 @@ public class CharFuncs : MonoBehaviour {
 						//Debug.Log ("Changed working num in doPutDown to "+workingNum+ " for " +thisChar.name);
 						shrinking = true;
 						if (thisChar.transform.GetChild (0).gameObject.name == "ArmPrefab") {
-							manipObj = thisChar.transform.GetChild (1).gameObject;
+							if (thisChar.transform.GetChild (1).gameObject.name == pulled.target.name) {
+								manipObj = thisChar.transform.GetChild (1).gameObject;
+							} else {
+								// invalid object
+								shrinking = false;
+								GlobalObjs.removeOne(pulled.msgnum);
+							}
 						} else {
-							manipObj = thisChar.transform.GetChild (0).gameObject;
+							if (thisChar.transform.GetChild (0).gameObject.name == pulled.target.name) {
+								manipObj = thisChar.transform.GetChild (0).gameObject;
+							} else {
+								shrinking = false;
+								GlobalObjs.removeOne(pulled.msgnum);
+							}
 						}
 					}
 					
 					//manipObj = thisChar.transform.GetChild(0).gameObject;
 					pickup = false;
-					Vector3 curpostn = manipObj.transform.position;
-					Quaternion currot = manipObj.transform.rotation;
-					manipObj.transform.position = new Vector3(curpostn.x, carrydropheight, curpostn.z);//curpostn;
-					manipObj.transform.rotation = currot;//thisChar.transform.rotation;
-					curscalesize = manipObj.transform.localScale;
-					
+					if (manipObj != null) {
+						Vector3 curpostn = manipObj.transform.position;
+						Quaternion currot = manipObj.transform.rotation;
+						//manipObj.transform.position = new Vector3(curpostn.x, carrydropheight, curpostn.z);//curpostn;
+
+						manipObj.transform.rotation = currot;//thisChar.transform.rotation;
+						curscalesize = manipObj.transform.localScale;
+					}					
 				}
 				break;
 			default:

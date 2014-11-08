@@ -30,6 +30,14 @@ public class GlobalObjs : MonoBehaviour
 	public static GameObject Grave = null;
 	public static GameObject StageRight = null;
 	public static GameObject CenterBackStage = null;
+	public static GameObject Center = null;
+	public static GameObject CenterRight = null;
+	public static GameObject DownStage = null;
+	public static GameObject StageLeft = null;
+	public static GameObject Steps = null;
+	public static GameObject Stool = null;
+	public static GameObject UpStage = null;
+	
 	
 	// Use this for initialization
 	void Start () {
@@ -95,6 +103,41 @@ public class GlobalObjs : MonoBehaviour
 		if (CenterBackStage == null) {
 			templist = GameObject.FindGameObjectsWithTag ("CenterBackStage");
 			CenterBackStage = templist[0];
+			templist = null;
+		}
+		if (Center == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Center");
+			Center = templist[0];
+			templist = null;
+		}
+		if (CenterRight == null) {
+			templist = GameObject.FindGameObjectsWithTag ("CenterRight");
+			CenterRight = templist[0];
+			templist = null;
+		}
+		if (DownStage == null) {
+			templist = GameObject.FindGameObjectsWithTag ("DownStage");
+			DownStage = templist[0];
+			templist = null;
+		}
+		if (StageLeft == null) {
+			templist = GameObject.FindGameObjectsWithTag ("StageLeft");
+			StageLeft = templist[0];
+			templist = null;
+		}
+		if (Steps == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Steps");
+			Steps = templist[0];
+			templist = null;
+		}
+		if (Stool == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Stool");
+			Stool = templist[0];
+			templist = null;
+		}
+		if (UpStage == null) {
+			templist = GameObject.FindGameObjectsWithTag ("UpStage");
+			UpStage = templist[0];
 			templist = null;
 		}
 		/*if (Box == null) {
@@ -182,6 +225,41 @@ public class GlobalObjs : MonoBehaviour
 			CenterBackStage = templist[0];
 			templist = null;
 		}
+		if (Center == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Center");
+			Center = templist[0];
+			templist = null;
+		}
+		if (CenterRight == null) {
+			templist = GameObject.FindGameObjectsWithTag ("CenterRight");
+			CenterRight = templist[0];
+			templist = null;
+		}
+		if (DownStage == null) {
+			templist = GameObject.FindGameObjectsWithTag ("DownStage");
+			DownStage = templist[0];
+			templist = null;
+		}
+		if (StageLeft == null) {
+			templist = GameObject.FindGameObjectsWithTag ("StageLeft");
+			StageLeft = templist[0];
+			templist = null;
+		}
+		if (Steps == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Steps");
+			Steps = templist[0];
+			templist = null;
+		}
+		if (Stool == null) {
+			templist = GameObject.FindGameObjectsWithTag ("Stool");
+			Stool = templist[0];
+			templist = null;
+		}
+		if (UpStage == null) {
+			templist = GameObject.FindGameObjectsWithTag ("UpStage");
+			UpStage = templist[0];
+			templist = null;
+		}
 		/*if (Box == null) {
 			templist = GameObject.FindGameObjectsWithTag("Box");
 			for (int i=0; i<templist.Length; i++) {
@@ -240,6 +318,27 @@ public class GlobalObjs : MonoBehaviour
 			break;
 		case "centerbackstage":
 			return CenterBackStage;
+			break;
+		case "center":
+			return Center;
+			break;
+		case "centerright":
+			return CenterRight;
+			break;
+		case "downstage":
+			return DownStage;
+			break;
+		case "stageleft":
+			return StageLeft;
+			break;
+		case "steps":
+			return Steps;
+			break;
+		case "stool":
+			return Stool;
+			break;
+		case "upstage":
+			return UpStage;
 			break;
 		default:
 			return null;
@@ -302,11 +401,15 @@ public class GlobalObjs : MonoBehaviour
 			GlobalObjs.globalQueue[removethis].actorFunc.speakNum = -1;
 		} else if (GlobalObjs.globalQueue[removethis].action == QueueObj.actiontype.point) {
 			GlobalObjs.globalQueue[removethis].actorFunc.pointnum = -1;
+		} else if (GlobalObjs.globalQueue[removethis].action == QueueObj.actiontype.intermission) {
+			// do nothing
 		} else {
 			GlobalObjs.globalQueue[removethis].actorFunc.workingNum = -1;
 		}
 		Debug.Log ("Removed msg="+which+", item="+removethis);
+		
 		GlobalObjs.globalQueue.RemoveAt(removethis);
+		//printQueue ("After removing one");
 /*		if (GlobalObjs.globalQueue.Count == 0) {
 			// read next set of lines
 			Debug.Log ("Calling next Step, no items in queue");

@@ -15,6 +15,7 @@ public class QueueObj : MonoBehaviour {
 		pickup,
 		putdown,
 		point,
+		intermission,
 		other
 	};
 	public static int curMsg = 0;
@@ -25,7 +26,9 @@ public class QueueObj : MonoBehaviour {
 		targetObj = t;
 		target = tp;
 		action = at;
-		actorFunc = GlobalObjs.getCharFunc(actorObj);
+		if (at != actiontype.intermission) {
+			actorFunc = GlobalObjs.getCharFunc(actorObj);
+		}
 		msgNum = curMsg;
 		curMsg++;
 	}

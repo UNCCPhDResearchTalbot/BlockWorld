@@ -53,6 +53,7 @@
      <Compile Include="Assets\Scripts\SpeechBubble.cs" />
      <Compile Include="Assets\Scripts\miniQueueObj.cs" />
      <None Include="Assets\Files\InputFile.txt" />
+     <None Include="Assets\Files\BMLFile.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
